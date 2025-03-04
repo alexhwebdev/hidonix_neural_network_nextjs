@@ -259,7 +259,7 @@ function RotatingScene({ children }) {
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += 0.00025; // Slow rotation
+      groupRef.current.rotation.y += 0.0002; // Slow rotation
     }
   });
 
@@ -275,38 +275,28 @@ export default function Home() {
 
   const handleDTClick = () => {
     if (positions["AI"] && positions["Robotics"]) {
-      setLines((prev) => {
-        // Check if the line already exists to prevent duplicates
-        const newLines = [
-          { start: [0, 0, 0], end: positions["AI"] },
-          { start: [0, 0, 0], end: positions["Robotics"] }
-        ];
+      // Set lines to only connect DeepTech to AI and Robotics directly
+      setLines([
+        { start: [0, 0, 0], end: positions["AI"] },
+        { start: [0, 0, 0], end: positions["Robotics"] }
+      ]);
   
-        const isLineExist = (newLine) =>
-          prev.some(
-            (line) =>
-              JSON.stringify(line.start) === JSON.stringify(newLine.start) &&
-              JSON.stringify(line.end) === JSON.stringify(newLine.end)
-          );
+      // Set connected particles to only DeepTech, AI, and Robotics
+      setConnectedParticles(new Set(["DT", "AI", "Robotics"]));
   
-        // Only add new lines if they don't already exist
-        const filteredLines = newLines.filter((newLine) => !isLineExist(newLine));
-  
-        return [...prev, ...filteredLines];
-      });
-  
-      setConnectedParticles((prev) => new Set([...prev, "DT", "AI", "Robotics"]));
-  
-      // Clear all previous messages and show only new messages for AI and Robotics
+      // Show messages only for AI and Robotics
       setActiveMessages([
         { name: "AI", position: positions["AI"] },
         { name: "Robotics", position: positions["Robotics"] }
       ]);
     } else {
-      // Clear all messages if no connections can be made
+      // Clear all messages and connections if AI or Robotics positions are not available
+      setLines([]);
+      setConnectedParticles(new Set());
       setActiveMessages([]);
     }
   };
+  
   
   
 
@@ -329,88 +319,143 @@ export default function Home() {
     setPositions((prev) => ({ ...prev, [name]: pos }));  // ...prev : shallow copy of previous positions object.
   };
 
+
   const handleParticleClick = (name) => {
     let newConnections = new Set(connectedParticles);
-    let nextParticle = null;
+    let newLines = [...lines]; // Create a copy of existing lines
   
-    if (name === "AI" && positions["Spatial Intelligence"]) {
-      nextParticle = "Spatial Intelligence";
+    if (
+      name === "AI" &&
+      positions["Spatial Intelligence"] &&
+      positions["Computer Vision"]
+    ) {
+      const lineToSpatial = { start: positions["AI"], end: positions["Spatial Intelligence"] };
+      const lineToVision = { start: positions["AI"], end: positions["Computer Vision"] };
   
-      setLines((prev) => {
-        const newLine = { start: positions["AI"], end: positions[nextParticle] };
-        const lineExists = prev.some(
-          (line) =>
-            JSON.stringify(line.start) === JSON.stringify(newLine.start) &&
-            JSON.stringify(line.end) === JSON.stringify(newLine.end)
-        );
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToSpatial)))
+        newLines.push(lineToSpatial);
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToVision)))
+        newLines.push(lineToVision);
   
-        return lineExists
-          ? prev.filter(
-              (line) =>
-                !(
-                  line.start[0] === 0 &&
-                  line.start[1] === 0 &&
-                  line.start[2] === 0 &&
-                  line.end === positions["Robotics"]
-                )
-            ) // Remove line to Robotics if exists
-          : [
-              ...prev.filter(
-                (line) =>
-                  !(
-                    line.start[0] === 0 &&
-                    line.start[1] === 0 &&
-                    line.start[2] === 0 &&
-                    line.end === positions["Robotics"]
-                  )
-              ),
-              newLine,
-            ]; // Add new line if not exists
-      });
-  
-      newConnections.delete("Robotics");
-    } else if (name === "Spatial Intelligence" && positions["ION"]) {
-      nextParticle = "ION";
-  
-      setLines((prev) => {
-        const newLine = { start: positions["Spatial Intelligence"], end: positions[nextParticle] };
-        const lineExists = prev.some(
-          (line) =>
-            JSON.stringify(line.start) === JSON.stringify(newLine.start) &&
-            JSON.stringify(line.end) === JSON.stringify(newLine.end)
-        );
-  
-        return lineExists ? prev : [...prev, newLine];
-      });
-    } else {
-      // Remove line from DeepTech to Robotics if AI is clicked
-      setLines((prev) =>
-        prev.filter(
-          (line) =>
-            !(
-              line.start[0] === 0 &&
-              line.start[1] === 0 &&
-              line.start[2] === 0 &&
-              line.end === positions["Robotics"]
-            )
-        )
+      newLines = newLines.filter(
+        (line) =>
+          !(
+            line.start[0] === 0 &&
+            line.start[1] === 0 &&
+            line.start[2] === 0 &&
+            JSON.stringify(line.end) === JSON.stringify(positions["Robotics"])
+          )
       );
-    }
   
-    if (nextParticle) {
-      newConnections.add(name);
-      newConnections.add(nextParticle);
+      newConnections.add("AI");
+      newConnections.add("Spatial Intelligence");
+      newConnections.add("Computer Vision");
+      newConnections.delete("Robotics");
   
-      // Show only the message for the next particle
-      setActiveMessages([{ name: nextParticle, position: positions[nextParticle] }]);
+      setLines(newLines);
+      setConnectedParticles(newConnections);
+      setActiveMessages([
+        { name: "Spatial Intelligence", position: positions["Spatial Intelligence"] },
+        { name: "Computer Vision", position: positions["Computer Vision"] }
+      ]);
+    } else if (name === "Spatial Intelligence" && positions["ION"]) {
+      const lineToION = { start: positions["Spatial Intelligence"], end: positions["ION"] };
+  
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToION)))
+        newLines.push(lineToION);
+  
+      newConnections.add("Spatial Intelligence");
+      newConnections.add("ION");
+  
+      setLines(newLines);
+      setConnectedParticles(newConnections);
+      setActiveMessages([{ name: "ION", position: positions["ION"] }]);
+    } else if (name === "Robotics" && positions["Drones IoT"]) {
+      const lineToDrones = { start: positions["Robotics"], end: positions["Drones IoT"] };
+  
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToDrones)))
+        newLines.push(lineToDrones);
+  
+      newLines = newLines.filter(
+        (line) =>
+          !(
+            JSON.stringify(line.start) === JSON.stringify(positions["AI"]) ||
+            JSON.stringify(line.end) === JSON.stringify(positions["AI"])
+          )
+      );
+  
+      newConnections.add("Robotics");
+      newConnections.add("Drones IoT");
+      newConnections.delete("AI");
+  
+      setLines(newLines);
+      setConnectedParticles(newConnections);
+      setActiveMessages([{ name: "Drones IoT", position: positions["Drones IoT"] }]);
+    } else if (
+      name === "Drones IoT" &&
+      positions["Security"] &&
+      positions["Cultural Heritage"]
+    ) {
+      const lineToSecurity = { start: positions["Drones IoT"], end: positions["Security"] };
+      const lineToCulturalHeritage = { start: positions["Drones IoT"], end: positions["Cultural Heritage"] };
+  
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToSecurity)))
+        newLines.push(lineToSecurity);
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToCulturalHeritage)))
+        newLines.push(lineToCulturalHeritage);
+  
+      newConnections.add("Drones IoT");
+      newConnections.add("Security");
+      newConnections.add("Cultural Heritage");
+  
+      setLines(newLines);
+      setConnectedParticles(newConnections);
+      setActiveMessages([
+        { name: "Security", position: positions["Security"] },
+        { name: "Cultural Heritage", position: positions["Cultural Heritage"] }
+      ]);
+    } else if (name === "Security" && positions["Safe School"]) {
+      const lineToSafeSchool = { start: positions["Security"], end: positions["Safe School"] };
+  
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToSafeSchool)))
+        newLines.push(lineToSafeSchool);
+  
+      newConnections.add("Security");
+      newConnections.add("Safe School");
+  
+      setLines(newLines);
+      setConnectedParticles(newConnections);
+      setActiveMessages([{ name: "Safe School", position: positions["Safe School"] }]);
+    } else if (name === "Cultural Heritage" && positions["MIT MST"]) {
+      // Add a line from Cultural Heritage to MIT MST
+      const lineToMIT = { start: positions["Cultural Heritage"], end: positions["MIT MST"] };
+  
+      if (!newLines.some(line => JSON.stringify(line) === JSON.stringify(lineToMIT)))
+        newLines.push(lineToMIT);
+  
+      // Update connected particles to include Cultural Heritage and MIT MST
+      newConnections.add("Cultural Heritage");
+      newConnections.add("MIT MST");
+  
+      setLines(newLines);
+      setConnectedParticles(newConnections);
+  
+      // Show message only for MIT MST
+      setActiveMessages([{ name: "MIT MST", position: positions["MIT MST"] }]);
     } else {
-      // Clear all messages if no next particle is found
+      // Clear all messages and connections if positions are not available
+      setLines([]);
+      setConnectedParticles(new Set());
       setActiveMessages([]);
     }
-  
-    newConnections.delete("Robotics");
-    setConnectedParticles(newConnections);
   };
+  
+  
+  
+  
+  
+  
+  
 
 
   return (
