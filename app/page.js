@@ -455,13 +455,13 @@ export default function Home() {
     // <div>test</div>
 
     <div className="">
-      <Image 
+      {/* <Image 
         src={BackgroundImg}
         fill={true}
         priority
         style={{objectFit: "cover"}}
         alt="background image"
-      />
+      /> */}
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }} style={{ height: "100vh" }}>
         {/* Fix lights directly to the scene instead of rotating with RotatingScene */}
         <ambientLight intensity={1.5} />
