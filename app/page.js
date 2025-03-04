@@ -1,12 +1,11 @@
 "use client"
 
-import React, { useRef, useMemo, useState, 
-  useEffect 
-} from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
+import Image from 'next/image';
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Line, Html } from "@react-three/drei";
 import * as THREE from "three";
-
+import BackgroundImg from "../public/background.png";
 import './globals.css';
 
 
@@ -89,49 +88,7 @@ function DeepTechParticle({ onClick }) {
 }
 
 
-function SecondaryParticles({ onPositionSave, onParticleClick, connectedParticles }) {
-  const count = 10;
-  const radius = 2.5; // Distance between each particles from center (DT particle)
-  // useMemo : cache positions to prevent recalculation on every render
-  const positions = useMemo(
-    () => generateFibonacciSphere(count, radius),
-    [count, radius]
-  );
-  // console.log('positions ', positions)
-  // 0 : (3) [1.0897247358851683, 0, 2.25]
-  // 1 : (3) [-1.3164667670578156, -1.2059913976610044, 1.75]
-  // 2 : (3) [0.18928224637288388, 2.1567735697583177, 1.2499999999999998]
-  // 3 : (3) [1.4510342028830256, -1.892617167327725, 0.7500000000000002]
-  // 4 : (3) [-2.449443867595813, 0.4332721309953661, 0.25]
-  // 5 : (3) [2.098814795826321, 1.3350941737647273, -0.2500000000000003]
-  // 6 : (3) [-0.6191168082553298, -2.3030836671158372, -0.75]
-  // 7 : (3) [-0.9978929804611961, 1.92138221068747, -1.2500000000000004]
-  // 8 : (3) [1.677023952276191, -0.6124464576531914, -1.7500000000000004]
-  // 9 : (3) [-1.0072822170289024, -0.41579145645063403, -2.25]
-
-  return (
-    <>
-      {positions.map((pos, index) => {
-        const name = particleNames[index];
-        if (onPositionSave) {
-          onPositionSave(name, pos)
-        };
-        return (
-          <GlowingParticle 
-            key={index} 
-            position={pos} 
-            name={name} 
-            onClick={() => onParticleClick(name)} 
-            isConnected={connectedParticles.has(name)} 
-          />
-        );
-      })}
-    </>
-  );
-}
-
-
-function GlowingParticle({ position, name, onClick, isConnected }) {
+function SecondaryParticleShapes({ position, name, onClick, isConnected }) {
   const auraRef = useRef();
 
   useFrame(({ clock }) => {
@@ -184,6 +141,48 @@ function GlowingParticle({ position, name, onClick, isConnected }) {
     </group>
   );
 }
+
+function SecondaryParticles({ onPositionSave, onParticleClick, connectedParticles }) {
+  const count = 10;
+  const radius = 2.5; // Distance between each particles from center (DT particle)
+  // useMemo : cache positions to prevent recalculation on every render
+  const positions = useMemo(
+    () => generateFibonacciSphere(count, radius),
+    [count, radius]
+  );
+  // console.log('positions ', positions)
+  // 0 : (3) [1.0897247358851683, 0, 2.25]
+  // 1 : (3) [-1.3164667670578156, -1.2059913976610044, 1.75]
+  // 2 : (3) [0.18928224637288388, 2.1567735697583177, 1.2499999999999998]
+  // 3 : (3) [1.4510342028830256, -1.892617167327725, 0.7500000000000002]
+  // 4 : (3) [-2.449443867595813, 0.4332721309953661, 0.25]
+  // 5 : (3) [2.098814795826321, 1.3350941737647273, -0.2500000000000003]
+  // 6 : (3) [-0.6191168082553298, -2.3030836671158372, -0.75]
+  // 7 : (3) [-0.9978929804611961, 1.92138221068747, -1.2500000000000004]
+  // 8 : (3) [1.677023952276191, -0.6124464576531914, -1.7500000000000004]
+  // 9 : (3) [-1.0072822170289024, -0.41579145645063403, -2.25]
+
+  return (
+    <>
+      {positions.map((pos, index) => {
+        const name = particleNames[index];
+        if (onPositionSave) {
+          onPositionSave(name, pos)
+        };
+        return (
+          <SecondaryParticleShapes 
+            key={index} 
+            position={pos} 
+            name={name} 
+            onClick={() => onParticleClick(name)} 
+            isConnected={connectedParticles.has(name)} 
+          />
+        );
+      })}
+    </>
+  );
+}
+
 
 
 function ConnectingLine({ start, end }) {
@@ -455,7 +454,14 @@ export default function Home() {
   return (
     // <div>test</div>
 
-    <div className="bkgd">
+    <div className="">
+      <Image 
+        src={BackgroundImg}
+        fill={true}
+        priority
+        style={{objectFit: "cover"}}
+        alt="background image"
+      />
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }} style={{ height: "100vh" }}>
         {/* Fix lights directly to the scene instead of rotating with RotatingScene */}
         <ambientLight intensity={1.5} />
