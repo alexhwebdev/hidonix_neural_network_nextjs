@@ -51,7 +51,7 @@ function generateFibonacciSphere(count, radius) {
 
 
 function DeepTechParticle({ onClick }) {
-  const deepTechRef = useRef();
+  // const deepTechRef = useRef();
 
   // Create pulse effect
   // useFrame(({ clock }) => {
@@ -62,8 +62,10 @@ function DeepTechParticle({ onClick }) {
   // });
 
   return (
-    <mesh ref={deepTechRef} position={[0, 0, 0]} onClick={onClick}>
-      <sphereGeometry args={[0.2, 64, 64]} />
+    <mesh 
+      // ref={deepTechRef} 
+      position={[0, 0, 0]} onClick={onClick}>
+      <sphereGeometry args={[0.2, 64, 64]} />  {/* radius, widthSegments, heightSegments */}
       <meshStandardMaterial 
           color={ "#004444"}      // Dark teal
           emissive={ "#046eb5"}   // Pastel Blue
@@ -148,8 +150,8 @@ function GlowingParticle({ position, name, onClick, isConnected }) {
           color={isConnected ? "#10adad" : "#004444"}     // Aqua : Medium teal
           emissive={isConnected ? "#10adad" : "#002222"}  // Aqua : Dark teal
           emissiveIntensity={isConnected ? 1.2 : 1.5} 
-          roughness={0.3}    
-          metalness={0.8}          
+          roughness={0.3}
+          metalness={0.8}
         />
       </mesh>
 
@@ -160,7 +162,7 @@ function GlowingParticle({ position, name, onClick, isConnected }) {
           color="#10adad"       // Aqua
           transparent={true} 
           opacity={0.55}  
-          depthWrite={false}      
+          depthWrite={false}
           emissive={isConnected ? "#10adad" : "#002222"}  // Aqua : Dark teal
           emissiveIntensity={isConnected ? 1.0 : 0.3} 
         />
@@ -270,8 +272,29 @@ function RotatingScene({ children }) {
 export default function Home() {
   const [positions, setPositions] = useState({});
   const [lines, setLines] = useState([]);
-  const [connectedParticles, setConnectedParticles] = useState(new Set());
+  const [connectedParticles, setConnectedParticles] = useState(new Set());  // Set() : useful for managing collections of items without duplicates
   const [activeMessages, setActiveMessages] = useState([]); // Message field tracking
+
+  
+  const savePosition = (name, pos) => {
+    // console.log('name ', name)
+    // console.log('pos ', pos)
+
+    // pos  Array(3)
+    //   0: 1.0897247358851683
+    //   1: 0
+    //   2: 2.25
+    // name  Robotics
+    
+    // pos  Array(3)
+    //   0: -1.3164667670578156
+    //   1: -1.2059913976610044
+    //   2: 1.75
+    // name  Spatial Intelligence
+    
+    setPositions((prev) => ({ ...prev, [name]: pos }));  // ...prev : shallow copy of previous positions object.
+  };
+
 
   const handleDTClick = () => {
     if (positions["AI"] && positions["Robotics"]) {
@@ -295,28 +318,6 @@ export default function Home() {
       setConnectedParticles(new Set());
       setActiveMessages([]);
     }
-  };
-  
-  
-  
-
-  const savePosition = (name, pos) => {
-    // console.log('name ', name)
-    // console.log('pos ', pos)
-
-    // pos  Array(3)
-    //   0: 1.0897247358851683
-    //   1: 0
-    //   2: 2.25
-    // name  Robotics
-    
-    // pos  Array(3)
-    //   0: -1.3164667670578156
-    //   1: -1.2059913976610044
-    //   2: 1.75
-    // name  Spatial Intelligence
-    
-    setPositions((prev) => ({ ...prev, [name]: pos }));  // ...prev : shallow copy of previous positions object.
   };
 
 
@@ -450,19 +451,13 @@ export default function Home() {
     }
   };
   
-  
-  
-  
-  
-  
-  
-
 
   return (
     // <div>test</div>
 
     <div className="bkgd">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }} style={{ height: "100vh" }}>
+        {/* Fix lights directly to the scene instead of rotating with RotatingScene */}
         <ambientLight intensity={1.5} />
         <directionalLight position={[2, 3, 4]} intensity={25} castShadow />
         <OrbitControls enableZoom={false} />
@@ -504,7 +499,7 @@ export default function Home() {
                   animation: "fadeIn 0.6s ease-in-out forwards"
                 }}
               >
-                <p>Lorem ipsum blah blah blah blah blah blah blah blah blah</p>
+                <p>Lorem ipsum blah blah blah blah</p>
                 <a href="http://www.google.com" style={{
                   color: "#00ffff",
                   textDecoration: "underline",
